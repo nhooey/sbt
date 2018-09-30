@@ -18,7 +18,7 @@ import BuildLoader.ResolveInfo
 import RichURI.fromURI
 import java.util.Locale
 
-import scala.sys.process.Process
+import scala.sys.process.{ Process, ProcessLogger }
 import scala.util.control.NonFatal
 import sbt.internal.util.Util
 
@@ -133,11 +133,19 @@ object Resolvers {
     run(None, command: _*)
 
   def run(cwd: Option[File], command: String*): Unit = {
+    val cmdStr: String = command.mkString(" ")
+    System.out.println(s"1 Running command: $cmdStr")
+    var output: String = ""
+    val pl: ProcessLogger = ProcessLogger(line => output += line, line => output += line)
+
     val result = Process(
       if (Util.isNonCygwinWindows) "cmd" +: "/c" +: command
       else command,
       cwd
-    ) !;
+    ) ! (pl);
+    System.out.println(s">>> Start of output for: $cmdStr")
+    System.out.println(output)
+    System.out.println(s"<<< End of output for: $cmdStr")
     if (result != 0)
       sys.error("Nonzero exit code (" + result + "): " + command.mkString(" "))
   }
